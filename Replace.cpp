@@ -117,6 +117,18 @@ int main( int argc, char *argv[] ) {
 	}
 	writeString = writeString + endOfFileMatch[0].str();
 
+	std::string defineStart = "<define>\n    ";
+	size_t pos = writeString.find(defineStart);
+	if (pos != std::string::npos) {
+		writeString.insert(pos + defineStart.size(), "<position name=\"center\" x=\"0.0\" y=\"0.0\" z=\"0.0\" unit=\"mm\"/>");
+	}
+
+	std::string solidsStart = "<solids>\n    ";
+	size_t pos2 = writeString.find(solidsStart);
+	if (pos2 != std::string::npos) {
+		writeString.insert(pos2 + solidsStart.size(), "<box aunit=\"radian\" lunit=\"mm\" name=\"worldbox\" x=\"10000\" y=\"10000\" z=\"10000\" />");
+	}
+
 	std::ofstream outFile(outputFileName);
 	outFile << writeString;
 	outFile.close();
