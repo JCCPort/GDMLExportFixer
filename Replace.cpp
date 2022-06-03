@@ -4,83 +4,23 @@
 #include <fstream>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/find.hpp>
-#include <sys/resource.h>
-#include <boost/algorithm/string/replace.hpp>
 #include <boost/utility/string_ref.hpp>
-#include <iomanip>
 
-//std::string replace_all_copy(const std::string &s, const std::string &f, const std::string &r) {
-//	if (s.empty() || f.empty() || f == r || f.size() > s.size()) {
-//		return s;
-//	}
-//	std::ostringstream buffer;
-//	auto start = s.cbegin();
-//	while (true) {
-//		const auto end = search(start, s.cend(), f.cbegin(), f.cend());
-//		copy(start, end, std::ostreambuf_iterator<char>(buffer));
-//		if (end == s.cend()) {
-//			break;
-//		}
-//		copy(r.cbegin(), r.cend(), std::ostreambuf_iterator<char>(buffer));
-//		start = end + f.size();
-//	}
-//	return buffer.str();
-//}
 
-std::string replace_all_copy(std::string const &original, std::string const &before, std::string const &after) {
-	std::string retval;
+inline std::string replace_all_copy(std::string const &original, std::string const &before, std::string const &after) {
+	std::string retString;
 	std::string::const_iterator end = original.end();
 	std::string::const_iterator current = original.begin();
 	std::string::const_iterator next = std::search(current, end, before.begin(), before.end());
 	while (next != end) {
-		retval.append(current, next);
-		retval.append(after);
+		retString.append(current, next);
+		retString.append(after);
 		current = next + before.size();
 		next = std::search(current, end, before.begin(), before.end());
 	}
-	retval.append(current, next);
-	return retval;
+	retString.append(current, next);
+	return retString;
 }
-
-//template<typename Range>
-//int expand(Range const & /*key*/) {
-//	return rand() % 42; // todo lookup value with key (be sure to stay lean here)
-//}
-//
-//
-//std::string fastReplace(const std::string inputString) {
-//	std::ostringstream builder;
-//	builder.str().reserve(1024); // reserve ample room, not crucial since we reuse it anyways
-//
-//	for (size_t iterations = 1ul << 14; iterations; --iterations) {
-//		builder.str("");
-//		std::ostreambuf_iterator<char> out(builder);
-//
-//		for (auto f(inputString.begin()), l(inputString.end()); f != l;) {
-//			switch (*f) {
-//				case '{' : {
-//					auto s = ++f;
-//					size_t n = 0;
-//
-//					while (f != l && *f != '}')
-//						++f, ++n;
-//
-//					// key is [s,f] now
-//					builder << expand(boost::string_ref(&*s, n));
-//
-//					if (f != l)
-//						++f; // skip '}'
-//				}
-//					break;
-//				default:
-//					*out++ = *f++;
-//			}
-//		}
-//		// to make it slow, uncomment:
-//		// std::cout << builder.str();
-//	}
-//	return builder.str();
-//}
 
 
 int main(int argc, char *argv[]) {
@@ -103,7 +43,7 @@ int main(int argc, char *argv[]) {
 	                                 "    <[^>]*>(?>\n"
 	                                 "      <[^\\/]*\\/>)*\n"
 	                                 "    <\\/[^>]*>\\n  <\\/[^>]*>)");
-	boost::regex startOfFile("<\\?xml[\\s\\S]+?(?=  <define>)");
+	boost::regex startOfFile(R"(<\?xml[\s\S]+?(?=  <define>))");
 	boost::regex endOfFile("\n  <structure>[\\s\\S]*");
 	boost::regex positions("position name=\"(\\d+)\" x");
 
@@ -174,15 +114,11 @@ int main(int argc, char *argv[]) {
 
 	std::string defineStart = "<define>\n    ";
 	size_t pos = writeString.find(defineStart);
-	if (pos != std::string::npos) {
-		writeString.insert(pos + defineStart.size(), "<position name=\"center\" x=\"0.0\" y=\"0.0\" z=\"0.0\" unit=\"mm\"/>");
-	}
+	writeString.insert(pos + defineStart.size(), R"(<position name="center" x="0.0" y="0.0" z="0.0" unit="mm"/>)");
 
 	std::string solidsStart = "<solids>\n    ";
 	size_t pos2 = writeString.find(solidsStart);
-	if (pos2 != std::string::npos) {
-		writeString.insert(pos2 + solidsStart.size(), "<box aunit=\"radian\" lunit=\"mm\" name=\"worldbox\" x=\"10000\" y=\"10000\" z=\"10000\" />");
-	}
+	writeString.insert(pos2 + solidsStart.size(), R"(<box aunit="radian" lunit="mm" name="worldbox" x="10000" y="10000" z="10000" />)");
 
 	std::ofstream outFile(outputFileName);
 	outFile << writeString;
